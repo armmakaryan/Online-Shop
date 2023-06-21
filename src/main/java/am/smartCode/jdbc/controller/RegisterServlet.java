@@ -30,10 +30,10 @@ public class RegisterServlet extends HttpServlet {
         User user = new User(name,lastname, balance, email, password, age);
         try {
             userService.register(user);
+            resp.sendRedirect("/login.jsp");
         } catch (Exception e) {
-            resp.sendRedirect("register.html");
+            req.setAttribute("message", e.getMessage());
+            req.getRequestDispatcher("register.jsp").forward(req, resp);
         }
-        resp.sendRedirect("/login.html");
-
     }
 }

@@ -6,14 +6,12 @@ public class Product {
     private long id;
     private String category;
     private String name;
-    private String publishedDate;
     private long price;
 
-    public Product(long id, String category, String name, String publishedYear, long price) {
+    public Product(long id, String category, String name, long price) {
         this.id = id;
         this.category = category;
         this.name = name;
-        this.publishedDate = publishedYear;
         this.price = price;
     }
 
@@ -44,14 +42,6 @@ public class Product {
         this.name = name;
     }
 
-    public String getPublishedDate() {
-        return publishedDate;
-    }
-
-    public void setPublishedDate(String publishedDate) {
-        this.publishedDate = publishedDate;
-    }
-
     public long getPrice() {
         return price;
     }
@@ -63,12 +53,11 @@ public class Product {
     @Override
     public String toString() {
         return "Product{" +
-               "id=" + id +
-               ", category='" + category + '\'' +
-               ", name='" + name + '\'' +
-               ", publishedDate=" + publishedDate +
-               ", price=" + price +
-               '}';
+                "id=" + id +
+                ", category='" + category + '\'' +
+                ", name='" + name + '\'' +
+                ", price=" + price +
+                '}';
     }
 
     @Override
@@ -76,11 +65,11 @@ public class Product {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Product product = (Product) o;
-        return id == product.id && price == product.price && Objects.equals(category, product.category) && Objects.equals(name, product.name) && Objects.equals(publishedDate, product.publishedDate);
+        return id == product.id && price == product.price && Objects.equals(category, product.category) && Objects.equals(name, product.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, category, name, publishedDate, price);
+        return Objects.hash(id, category, name, price);
     }
 }

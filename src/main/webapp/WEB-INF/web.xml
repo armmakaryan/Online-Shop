@@ -47,12 +47,12 @@
 
 
     <servlet>
-        <servlet-name>delete</servlet-name>
+        <servlet-name>deleteProduct</servlet-name>
         <servlet-class>am.smartCode.jdbc.controller.DeleteProductServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>delete</servlet-name>
+        <servlet-name>deleteProduct</servlet-name>
         <url-pattern>/deleteProduct</url-pattern>
     </servlet-mapping>
 
@@ -76,6 +76,28 @@
     <servlet-mapping>
         <servlet-name>get</servlet-name>
         <url-pattern>/getProduct</url-pattern>
+    </servlet-mapping>
+
+
+    <servlet>
+        <servlet-name>deleteAccount</servlet-name>
+        <servlet-class>am.smartCode.jdbc.controller.DeleteAccountServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>deleteAccount</servlet-name>
+        <url-pattern>/deleteAccount</url-pattern>
+    </servlet-mapping>
+
+
+    <servlet>
+        <servlet-name>changePassword</servlet-name>
+        <servlet-class>am.smartCode.jdbc.controller.ChangePasswordServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>changePassword</servlet-name>
+        <url-pattern>/changePassword</url-pattern>
     </servlet-mapping>
 
 </web-app>

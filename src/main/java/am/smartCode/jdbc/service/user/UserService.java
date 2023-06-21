@@ -8,4 +8,7 @@ public interface UserService {
 
     void login(String email, String password) throws Exception;
 
+    void changePassword(String username, String newPassword, String repeatPassword);
+
+    void deleteAccount(String email, String password) throws Exception;
 }

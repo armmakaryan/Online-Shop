@@ -1,13 +1,14 @@
 package am.smartCode.jdbc.service.product.impl;
 
+import am.smartCode.jdbc.exception.ValidationException;
 import am.smartCode.jdbc.model.Product;
 import am.smartCode.jdbc.repository.product.ProductRepository;
 import am.smartCode.jdbc.service.product.ProductService;
+import am.smartCode.jdbc.util.constants.Message;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
@@ -17,12 +18,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void createProduct(String category, String name, String publishedDate, long price) throws SQLException {
-        productValidation(category, name, publishedDate, price);
+    public void createProduct(String category, String name, long price) throws SQLException {
+        productValidation(category, name,price);
         Product product = new Product();
         product.setCategory(category);
         product.setName(name);
-        product.setPublishedDate(publishedDate);
         product.setPrice(price);
         productRepository.create(product);
 
@@ -33,7 +33,7 @@ public class ProductServiceImpl implements ProductService {
         Connection connection = productRepository.getConnection();
         connection.setAutoCommit(false);
         try {
-            productValidation(product.getCategory(), product.getName(), product.getPublishedDate(), product.getPrice());
+            productValidation(product.getCategory(), product.getName(),product.getPrice());
             productRepository.update(product);
             connection.commit();
             System.out.println("Product is updated");
@@ -47,7 +47,7 @@ public class ProductServiceImpl implements ProductService {
     public Product getProduct(long id) throws SQLException {
         Connection connection = productRepository.getConnection();
         if (id <= 0) {
-            throw new RuntimeException("Inserted ID must be > 0");
+            throw new ValidationException(Message.INVALID_ID);
         }
         return productRepository.get(id);
     }
@@ -58,7 +58,7 @@ public class ProductServiceImpl implements ProductService {
         connection.setAutoCommit(false);
         try {
             if (id <= 0) {
-                throw new RuntimeException("Inserted ID must be > 0");
+                throw new ValidationException(Message.INVALID_ID);
             }
             productRepository.delete(id);
             connection.commit();
@@ -83,18 +83,15 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findProductsByName(name);
     }
 
-    private static void productValidation(String category, String name, String publishedDate, long price) {
+    private static void productValidation(String category, String name,long price) {
         if (category.equals(null) || category.equals("")) {
-            throw new RuntimeException("Please enter product category");
+            throw new ValidationException(Message.BLANK_PRODUCT_CATEGORY);
         }
         if (name.equals(null) || name.equals("")) {
-            throw new RuntimeException("Please enter product name");
-        }
-        if (!Pattern.compile("^(3[01]|[12][0-9]|0[1-9])/(1[0-2]|0[1-9])/[0-9]{4}$").matcher(publishedDate).matches()) {
-            throw new RuntimeException("Please enter valid published year ");
+            throw new ValidationException(Message.BLANK_PRODUCT_NAME);
         }
         if (price <= 0) {
-            throw new RuntimeException("Please enter price of product");
+            throw new ValidationException(Message.INVALID_PRICE);
         }
     }
 }

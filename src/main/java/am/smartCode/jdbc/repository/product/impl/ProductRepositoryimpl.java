@@ -14,7 +14,7 @@ import java.util.List;
 public class ProductRepositoryimpl implements ProductRepository {
     private final Connection connection;
 
-    public ProductRepositoryimpl(DatabaseConnection databaseConnection)  {
+    public ProductRepositoryimpl(DatabaseConnection databaseConnection) {
         this.connection = databaseConnection.getConnection();
         try {
             this.connection.createStatement().executeUpdate(
@@ -43,12 +43,11 @@ public class ProductRepositoryimpl implements ProductRepository {
     public void create(Product product) throws SQLException {
 
         PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO products (category,name,price,publishedDate) VALUES (?,?,?,?)"
+                "INSERT INTO products (id,category,name,price) VALUES (?,?,?)"
         );
         preparedStatement.setString(1, product.getCategory());
         preparedStatement.setString(2, product.getName());
-        preparedStatement.setString(3, product.getPublishedDate());
-        preparedStatement.setLong(4, product.getPrice());
+        preparedStatement.setLong(3, product.getPrice());
 
         preparedStatement.executeUpdate();
 
@@ -58,14 +57,13 @@ public class ProductRepositoryimpl implements ProductRepository {
     @Override
     public void update(Product product) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
-                "UPDATE products SET category = ?, name = ?, publishedDate = ?, price = ? WHERE id = ?"
+                "UPDATE products SET category = ?, name = ?, price = ? WHERE id = ?"
         );
 
         preparedStatement.setString(1, product.getCategory());
         preparedStatement.setString(2, product.getName());
-        preparedStatement.setString(3, product.getPublishedDate());
-        preparedStatement.setLong(4, product.getPrice());
-        preparedStatement.setLong(5, product.getId());
+        preparedStatement.setLong(3, product.getPrice());
+        preparedStatement.setLong(4, product.getId());
         preparedStatement.executeUpdate();
         preparedStatement.close();
     }
@@ -125,7 +123,6 @@ public class ProductRepositoryimpl implements ProductRepository {
         product.setId(resultSet.getLong("id"));
         product.setCategory(resultSet.getString("category"));
         product.setName(resultSet.getString("name"));
-        product.setPublishedDate(resultSet.getString("published_date"));
         product.setPrice(resultSet.getLong("price"));
     }
 

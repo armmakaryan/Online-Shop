@@ -1,8 +1,10 @@
 package am.smartCode.jdbc.repository.user.impl;
 
+import am.smartCode.jdbc.exception.UserNotFoundException;
 import am.smartCode.jdbc.model.User;
 import am.smartCode.jdbc.repository.user.UserRepository;
 import am.smartCode.jdbc.util.DatabaseConnection;
+import am.smartCode.jdbc.util.constants.Message;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -86,11 +88,72 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public User get(String email) throws SQLException {
+        User user = new User();
+        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * from users WHERE email = ?");
+        preparedStatement.setString(1, email);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            setUserFields(user, resultSet);
+            resultSet.close();
+            preparedStatement.close();
+            return user;
+        }
+        return null;
+    }
+    @Override
     public List<User> getAll() throws SQLException {
         List<User> usersList = new ArrayList<>();
         ResultSet resultSet = connection.createStatement().executeQuery("SELECT * from users");
         addUserToListFromResultSet(usersList, resultSet);
         return usersList;
+    }
+
+    @Override
+    public User findUsersByEmail(String email) {
+        User user = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            preparedStatement = connection.prepareStatement(
+                    "SELECT * FROM users WHERE email = ?"
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            preparedStatement.setString(1, email);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        ResultSet resultSet = null;
+        try {
+            resultSet = preparedStatement.executeQuery();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            if (resultSet.next()) {
+                user = new User();
+                setUserFields(user, resultSet);
+            } else
+                throw new UserNotFoundException(Message.USER_NOT_FOUND);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            resultSet.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            preparedStatement.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return user;
     }
 
 
@@ -119,6 +182,16 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public void delete(String email) throws SQLException {
+
+        PreparedStatement preparedStatement = connection.prepareStatement("DELETE from users WHERE username = ?");
+        preparedStatement.setString(1, email);
+
+        preparedStatement.executeUpdate();
+        preparedStatement.close();
+    }
+
+    @Override
     public User findUsersByEmailAndPassword(String email, String password) throws Exception {
         User user = null;
         PreparedStatement preparedStatement = connection.prepareStatement(
@@ -139,6 +212,11 @@ public class UserRepositoryImpl implements UserRepository {
         preparedStatement.close();
 
         return user;
+    }
+
+    @Override
+    public Connection getConnection() {
+        return connection;
     }
 
     private void setUserFields(User user, ResultSet resultSet) throws SQLException {

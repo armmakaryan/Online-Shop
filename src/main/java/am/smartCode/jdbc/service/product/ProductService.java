@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public interface ProductService {
-    void createProduct(String category, String name, String publishedDate, long price) throws SQLException;
+    void createProduct(String category, String name,long price) throws SQLException;
 
     void updateProduct(Product product) throws SQLException;
 

@@ -1,6 +1,5 @@
 package am.smartCode.jdbc.controller;
 
-import am.smartCode.jdbc.repository.user.UserRepository;
 import am.smartCode.jdbc.repository.user.impl.UserRepositoryImpl;
 import am.smartCode.jdbc.service.user.UserService;
 import am.smartCode.jdbc.service.user.impl.UserServiceImpl;
@@ -12,23 +11,21 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class LoginServlet extends HttpServlet {
-
+public class ChangePasswordServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
-        var email = req.getParameter("email");
-        var password = req.getParameter("password");
-        DatabaseConnection databaseConnection = DatabaseConnection.getInstance();
-        UserRepository userRepository = new UserRepositoryImpl(databaseConnection);
-        UserService userService = new UserServiceImpl(userRepository);
+        String email = req.getParameter("email");
+        String newPassword = req.getParameter("newPassword");
+        String repeatPassword = req.getParameter("repeatPassword");
+        UserService userService = new UserServiceImpl(new UserRepositoryImpl(DatabaseConnection.getInstance()));
         try {
-            userService.login(email, password);
+            userService.changePassword(email, newPassword, repeatPassword);
             req.setAttribute("email", email);
-            req.getRequestDispatcher("index.jsp").forward(req, resp);
+            req.getRequestDispatcher("/index.jsp").forward(req, resp);
         } catch (Exception e) {
             req.setAttribute("message", e.getMessage());
-            req.getRequestDispatcher("index.jsp").forward(req, resp);
+            req.getRequestDispatcher("changePassword.jsp").forward(req, resp);
         }
     }
 }
+

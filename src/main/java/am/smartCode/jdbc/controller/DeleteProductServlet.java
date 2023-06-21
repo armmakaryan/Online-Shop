@@ -24,9 +24,9 @@ public class DeleteProductServlet extends HttpServlet {
         ProductService productService = new ProductServiceImpl(productRepository);
         try {
             productService.deleteProduct(id);
-            resp.sendRedirect("/product.html");
+            resp.sendRedirect("/product.jsp");
         }catch (Exception e){
-            resp.sendRedirect("/deleteProduct");
+            resp.sendRedirect("/deleteProduct.jsp");
         }
     }
 }
