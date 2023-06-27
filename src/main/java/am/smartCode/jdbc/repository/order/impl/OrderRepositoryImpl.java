@@ -1,10 +1,9 @@
 package am.smartCode.jdbc.repository.order.impl;
 
 import am.smartCode.jdbc.model.Order;
-import am.smartCode.jdbc.model.Product;
-import am.smartCode.jdbc.model.User;
 import am.smartCode.jdbc.repository.order.OrderRepository;
 import am.smartCode.jdbc.util.DatabaseConnection;
+import am.smartCode.jdbc.util.constants.Strings;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -14,7 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderRepositoryImpl implements OrderRepository {
+
     private final Connection connection;
+    @Override
+    public Connection getConnection(){
+        return connection;
+    }
 
     public OrderRepositoryImpl(DatabaseConnection databaseConnection) {
         this.connection = databaseConnection.getConnection();
@@ -23,10 +27,14 @@ public class OrderRepositoryImpl implements OrderRepository {
                     """
                             CREATE TABLE IF NOT EXISTS orders (
                             id bigserial primary key,
-                            userId bigserial not null,
-                            productId bigserial not null,
-                            totalPrice double precision not null,
-                            totalCountOfProduct int not null
+                            user_id bigint not null
+                            constraint fk_order_user
+                            references users,
+                            product_id bigint not null
+                            constraint fk_order_product
+                            references products,
+                            count_of_product integer not null,
+                            total_price integer not null
                             )
                             """);
         } catch (SQLException e) {
@@ -35,51 +43,25 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public void create(User user, Product product, int count) throws Exception {
+    public void create(Order order) throws SQLException {
+
         PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO orders (userId,productId,totalPrice,totalcountofproducts) VALUES (?,?,?,?)"
+                "INSERT INTO orders (userid,productid,totalcountofproducts,totalprice) VALUES (?,?,?,?)"
         );
-        preparedStatement.setLong(1, user.getId());
-        preparedStatement.setLong(2, product.getId());
-        preparedStatement.setInt(4, count);
-
-        double productPrice = product.getPrice();
-        double totalPrice = count * productPrice;
-            /*if (user.getBalance() < totalPrice){
-                throw new Exception("Your account doesn't have enough money");
-            }else {
-                preparedStatement.setDouble(3, totalPrice);
-                System.out.println("Your order has been confirmed");
-            }*/
-        if (user.getBalance() < totalPrice) {
-            throw new Exception("Your account doesn't have enough money");
-        }
-        preparedStatement.setDouble(3, totalPrice);
-
-        preparedStatement.executeUpdate();
-        preparedStatement.close();
-    }
-
-    @Override
-    public void update(Order order) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement(
-                "UPDATE orders SET userId = ?, productId = ?, totalPrice = ?, totalcountofproducts = ? WHERE id = ?"
-        );
-
-        preparedStatement.setLong(1, order.getId());
+        preparedStatement.setLong(1, order.getUserId());
         preparedStatement.setLong(2, order.getProductId());
-        preparedStatement.setDouble(3, order.getTotalPrice());
-        preparedStatement.setInt(4, order.getTotalCountOfProduct());
-        preparedStatement.setLong(5, order.getId());
-
+        preparedStatement.setInt(3, order.getCountOfProduct());
+        preparedStatement.setLong(4, order.getTotalPrice());
         preparedStatement.executeUpdate();
+
         preparedStatement.close();
     }
 
     @Override
-    public Order getOrderById(Long id) throws SQLException {
+    public Order getOrderWithOrderId(Long id) throws SQLException {
+        connection.setReadOnly(true);
         Order order = new Order();
-        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * from orders WHERE userId = ?");
+        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * from orders WHERE id = ?");
         preparedStatement.setLong(1, id);
         ResultSet resultSet = preparedStatement.executeQuery();
         while (resultSet.next()) {
@@ -87,39 +69,42 @@ public class OrderRepositoryImpl implements OrderRepository {
         }
         resultSet.close();
         preparedStatement.close();
+        connection.setReadOnly(false);
         return order;
     }
 
     @Override
-    public List<Order> getAll() throws SQLException {
-        List<Order> ordersList = new ArrayList<>();
-        ResultSet resultSet = connection.createStatement().executeQuery("SELECT * from orders");
-        addProductToListFromResultSet(ordersList, resultSet);
-        return ordersList;
+    public List<Order> getAllOrdersOfOnePerson(Long id) throws SQLException {
+        List<Order> orders = new ArrayList<>();
+        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * from orders WHERE userid = ?");
+        preparedStatement.setLong(1, id);
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        addOrderToListFromResultSet(orders, resultSet);
+        return orders;
     }
 
     @Override
-    public void delete(Long id) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement("DELETE from orders WHERE id = ?");
-        preparedStatement.setLong(1, id);
-
-        preparedStatement.executeUpdate();
-        preparedStatement.close();
+    public List<Order> getAllOrders() throws SQLException {
+        List<Order> orders = new ArrayList<>();
+        ResultSet resultSet = connection.createStatement().executeQuery("SELECT * from orders");
+        addOrderToListFromResultSet(orders, resultSet);
+        return orders;
     }
 
     private void setOrderFields(Order order, ResultSet resultSet) throws SQLException {
-        order.setId(resultSet.getLong("id"));
-        order.setUserId(resultSet.getLong("userId"));
-        order.setProductId(resultSet.getLong("productId"));
-        order.setTotalPrice(resultSet.getDouble("totalPrice"));
-        order.setTotalCountOfProduct(resultSet.getInt("totalCountOfProduct"));
+        order.setId(resultSet.getLong(Strings.ID));
+        order.setUserId(resultSet.getLong(Strings.USER_ID));
+        order.setProductId(resultSet.getLong(Strings.PRODUCT_ID));
+        order.setCountOfProduct(resultSet.getInt(Strings.COUNT_OF_PRODUCT));
+        order.setTotalPrice(resultSet.getLong(Strings.TOTAL_PRICE));
     }
 
-    private void addProductToListFromResultSet(List<Order> ordersList, ResultSet resultSet) throws SQLException {
+    private void addOrderToListFromResultSet(List<Order> orders, ResultSet resultSet) throws SQLException {
         while (resultSet.next()) {
             Order order = new Order();
             setOrderFields(order, resultSet);
-            ordersList.add(order);
+            orders.add(order);
         }
     }
 }

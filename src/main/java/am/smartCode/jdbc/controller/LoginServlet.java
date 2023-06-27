@@ -1,34 +1,39 @@
 package am.smartCode.jdbc.controller;
 
-import am.smartCode.jdbc.repository.user.UserRepository;
 import am.smartCode.jdbc.repository.user.impl.UserRepositoryImpl;
 import am.smartCode.jdbc.service.user.UserService;
 import am.smartCode.jdbc.service.user.impl.UserServiceImpl;
 import am.smartCode.jdbc.util.DatabaseConnection;
+import am.smartCode.jdbc.util.constants.Path;
+import am.smartCode.jdbc.util.constants.Strings;
+import am.smartCode.jdbc.util.encoder.AESManager;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
 import java.io.IOException;
 
 public class LoginServlet extends HttpServlet {
-
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
-        var email = req.getParameter("email");
-        var password = req.getParameter("password");
-        DatabaseConnection databaseConnection = DatabaseConnection.getInstance();
-        UserRepository userRepository = new UserRepositoryImpl(databaseConnection);
-        UserService userService = new UserServiceImpl(userRepository);
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+        String email = req.getParameter(Strings.EMAIL);
+        String password = req.getParameter(Strings.PASSWORD);
+        String rememberMe = req.getParameter(Strings.REMEMBER_ME);
+        UserService userService = new UserServiceImpl(new UserRepositoryImpl(DatabaseConnection.getInstance()));
         try {
             userService.login(email, password);
-            req.setAttribute("email", email);
-            req.getRequestDispatcher("index.jsp").forward(req, resp);
+            if (rememberMe != null && rememberMe.equals(Strings.ON)) {
+                Cookie cookie = new Cookie(Strings.REMEMBER, AESManager.encrypt(email + ":" + password));
+                cookie.setMaxAge(360000);
+                resp.addCookie(cookie);
+            }
+            HttpSession session = req.getSession();
+            session.setAttribute(Strings.EMAIL, email);
+            req.getRequestDispatcher(Path.HOME_PAGE).forward(req, resp);
         } catch (Exception e) {
-            req.setAttribute("message", e.getMessage());
-            req.getRequestDispatcher("index.jsp").forward(req, resp);
+            req.setAttribute(Strings.MESSAGE, e.getMessage());
+            req.getRequestDispatcher(Path.LOGIN).forward(req, resp);
         }
+
+
     }
 }

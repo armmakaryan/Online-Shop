@@ -1,10 +1,9 @@
 package am.smartCode.jdbc.repository.user.impl;
 
-import am.smartCode.jdbc.exception.UserNotFoundException;
 import am.smartCode.jdbc.model.User;
 import am.smartCode.jdbc.repository.user.UserRepository;
 import am.smartCode.jdbc.util.DatabaseConnection;
-import am.smartCode.jdbc.util.constants.Message;
+import am.smartCode.jdbc.util.constants.Strings;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,10 +25,10 @@ public class UserRepositoryImpl implements UserRepository {
                             id bigserial primary key,
                             name varchar(255) not null,
                             lastname varchar(255) not null,
-                            balance double precision not null,
-                            email varchar(255) not null ,
+                            username varchar(255) not null unique,
                             password varchar(255) not null,
-                            age integer not null
+                            age integer not null,
+                            balance integer not null
                             )
                             """);
         } catch (SQLException e) {
@@ -42,14 +41,14 @@ public class UserRepositoryImpl implements UserRepository {
     public void create(User user) throws SQLException {
 
         PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO users (name,lastname, balance,email,password,age) VALUES (?,?,?,?,?,?)"
+                "INSERT INTO users (name,lastname,email,password,age,balance) VALUES (?,?,?,?,?,?)"
         );
         preparedStatement.setString(1, user.getName());
         preparedStatement.setString(2, user.getLastname());
-        preparedStatement.setDouble(3, user.getBalance());
-        preparedStatement.setString(4, user.getEmail());
-        preparedStatement.setString(5, user.getPassword());
-        preparedStatement.setInt(6, user.getAge());
+        preparedStatement.setString(3, user.getEmail());
+        preparedStatement.setString(4, user.getPassword());
+        preparedStatement.setInt(5, user.getAge());
+        preparedStatement.setLong(6, (long) user.getBalance());
 
         preparedStatement.executeUpdate();
         preparedStatement.close();
@@ -58,17 +57,16 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public void update(User user) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(
-                "UPDATE users SET name = ?, lastname = ?, balance = ?, email = ?, password = ?, age = ? WHERE id = ?"
+                "UPDATE users SET name = ?, lastname = ?, email = ?, password = ?, age = ?, balance = ? WHERE id = ?"
         );
 
         preparedStatement.setString(1, user.getName());
         preparedStatement.setString(2, user.getLastname());
-        preparedStatement.setDouble(3, user.getBalance());
-        preparedStatement.setString(4, user.getEmail());
-        preparedStatement.setString(5, user.getPassword());
-        preparedStatement.setInt(6, user.getAge());
+        preparedStatement.setString(3, user.getEmail());
+        preparedStatement.setString(4, user.getPassword());
+        preparedStatement.setInt(5, user.getAge());
+        preparedStatement.setLong(6, (long) user.getBalance());
         preparedStatement.setLong(7, user.getId());
-
         preparedStatement.executeUpdate();
         preparedStatement.close();
     }
@@ -101,59 +99,13 @@ public class UserRepositoryImpl implements UserRepository {
         }
         return null;
     }
+
     @Override
     public List<User> getAll() throws SQLException {
         List<User> usersList = new ArrayList<>();
         ResultSet resultSet = connection.createStatement().executeQuery("SELECT * from users");
         addUserToListFromResultSet(usersList, resultSet);
         return usersList;
-    }
-
-    @Override
-    public User findUsersByEmail(String email) {
-        User user = null;
-        PreparedStatement preparedStatement = null;
-        try {
-            preparedStatement = connection.prepareStatement(
-                    "SELECT * FROM users WHERE email = ?"
-            );
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            preparedStatement.setString(1, email);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        ResultSet resultSet = null;
-        try {
-            resultSet = preparedStatement.executeQuery();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            if (resultSet.next()) {
-                user = new User();
-                setUserFields(user, resultSet);
-            } else
-                throw new UserNotFoundException(Message.USER_NOT_FOUND);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            resultSet.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            preparedStatement.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        return user;
     }
 
 
@@ -171,20 +123,9 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void delete(Long id) throws SQLException {
-
-        PreparedStatement preparedStatement = connection.prepareStatement("DELETE from users WHERE id = ?");
-        preparedStatement.setLong(1, id);
-
-        preparedStatement.executeUpdate();
-
-        preparedStatement.close();
-    }
-
-    @Override
     public void delete(String email) throws SQLException {
 
-        PreparedStatement preparedStatement = connection.prepareStatement("DELETE from users WHERE username = ?");
+        PreparedStatement preparedStatement = connection.prepareStatement("DELETE from users WHERE email = ?");
         preparedStatement.setString(1, email);
 
         preparedStatement.executeUpdate();
@@ -192,41 +133,30 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public User findUsersByEmailAndPassword(String email, String password) throws Exception {
-        User user = null;
-        PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT * FROM users WHERE email = ? AND password = ?"
-        );
-        preparedStatement.setString(1,email);
-        preparedStatement.setString(2,password);
-
-        ResultSet resultSet = preparedStatement.executeQuery();
-        if(resultSet.next()){
-            user = new User();
-            setUserFields(user,resultSet);
-        }
-        else
-            throw new Exception("User not found");
-
-        resultSet.close();
-        preparedStatement.close();
-
-        return user;
-    }
-
-    @Override
     public Connection getConnection() {
         return connection;
     }
 
+    @Override
+    public void updateByEmail(String email,String password) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(
+                "UPDATE users SET password = ? WHERE email = ?"
+        );
+
+        preparedStatement.setString(1,password);
+        preparedStatement.setString(2,email);
+        preparedStatement.executeUpdate();
+        preparedStatement.close();
+    }
+
     private void setUserFields(User user, ResultSet resultSet) throws SQLException {
-        user.setId(resultSet.getLong("id"));
-        user.setName(resultSet.getString("name"));
-        user.setLastname(resultSet.getString("lastname"));
-        user.setBalance(resultSet.getDouble("balance"));
-        user.setEmail(resultSet.getString("email"));
-        user.setPassword(resultSet.getString("password"));
-        user.setAge(resultSet.getInt("age"));
+        user.setId(resultSet.getLong(Strings.ID));
+        user.setName(resultSet.getString(Strings.NAME));
+        user.setLastname(resultSet.getString(Strings.LASTNAME));
+        user.setEmail(resultSet.getString(Strings.USERNAME));
+        user.setPassword(resultSet.getString(Strings.PASSWORD));
+        user.setAge(resultSet.getInt(Strings.AGE));
+        user.setBalance(resultSet.getLong(Strings.BALANCE));
     }
 
     private void addUserToListFromResultSet(List<User> usersList, ResultSet resultSet) throws SQLException {

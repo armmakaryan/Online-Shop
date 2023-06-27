@@ -1,21 +1,19 @@
 package am.smartCode.jdbc.repository.order;
 
+import am.smartCode.jdbc.model.*;
 
-import am.smartCode.jdbc.model.Order;
-import am.smartCode.jdbc.model.Product;
-import am.smartCode.jdbc.model.User;
-
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 public interface OrderRepository {
-    void create(User user, Product product, int count) throws Exception;
+    public Connection getConnection();
+    void create(Order order) throws SQLException;
 
-    void update(Order order) throws SQLException;
+    Order getOrderWithOrderId(Long id) throws SQLException;
 
-    Order getOrderById(Long id) throws SQLException;
+    List<Order> getAllOrdersOfOnePerson(Long id) throws SQLException;
 
-    List<Order> getAll() throws SQLException;
+    List<Order> getAllOrders() throws SQLException;
 
-    void delete(Long id) throws SQLException;
 }

@@ -6,10 +6,12 @@ import am.smartCode.jdbc.model.User;
 import am.smartCode.jdbc.repository.user.UserRepository;
 import am.smartCode.jdbc.service.user.UserService;
 import am.smartCode.jdbc.util.constants.Message;
+import am.smartCode.jdbc.util.encoder.MD5Encoder;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class UserServiceImpl implements UserService {
 
@@ -19,56 +21,48 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
     }
 
-
     @Override
-    public void register(User user) throws Exception {
+    public void register(String name, String lastname, String email, String password, int age, long balance) throws SQLException {
 
         Connection connection = userRepository.getConnection();
         connection.setAutoCommit(false);
-        try {
-            Validation(user);
+
+        Validation(email, password, age, balance);
+        if (userRepository.get(email) != null){
+            throw new ValidationException(Message.EMAIL_IS_NOT_AVAILABLE);
+        }
+        try {  User user = new User();
+            user.setName(name);
+            user.setLastname(lastname);
+            user.setEmail(email);
+            user.setPassword(MD5Encoder.encode(password));
+            user.setAge(age);
+            user.setBalance(balance);
             userRepository.create(user);
-            System.out.println(user.getName() + " you are registered successfully");
+            connection.commit();
         } catch (Exception e) {
             connection.rollback();
             connection.setAutoCommit(true);
             throw new RuntimeException(Message.REGISTRATION_FAILED + ", " + e.getMessage());
         }
+
+
     }
 
     @Override
-    public void login(String email, String password) throws Exception {
+    public void login(String email, String password) throws SQLException {
         Validation(email, password);
         User user = userRepository.get(email);
         if (user == null) {
             throw new UserNotFoundException(Message.USER_NOT_FOUND);
         }
-        if (!Objects.equals(user.getPassword(), password)) {
+        if (!Objects.equals(user.getPassword(), MD5Encoder.encode(password))) {
             throw new ValidationException(Message.INVALID_PASSWORD);
         }
-        System.out.println(user.getName() + Message.AUTHENTICATION_SUCCESS);
     }
 
     @Override
-    public void changePassword(String username, String newPassword, String repeatPassword) {
-
-        if (!newPassword.equals(repeatPassword)) {
-            throw new ValidationException("Passwords not matches");
-        }
-        var usersByEmail = userRepository.findUsersByEmail("email");
-        if (usersByEmail == null)
-            throw new UserNotFoundException(Message.USER_NOT_FOUND);
-
-        usersByEmail.setPassword(newPassword);
-        try {
-            userRepository.update(usersByEmail);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void deleteAccount(String email, String password) throws Exception {
+    public void deleteUser(String email, String password) throws SQLException {
         Validation(email, password);
         Connection connection = userRepository.getConnection();
         if (!userRepository.get(email).getPassword().equals(password)) {
@@ -85,25 +79,55 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-
-    private void Validation(User user) throws Exception {
-        if (user.getEmail() == null || user.getEmail().length() == 0) {
-            throw new ValidationException(Message.BLANK_EMAIL);
+    @Override
+    public void updateUser(String email, String newPassword, String repeatPassword) throws SQLException {
+        if (email == null || email.isEmpty()) {
+            throw new ValidationException(Message.USER_NOT_FOUND);
         }
-        if (!user.getEmail().matches("^[\\w!#$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&'*+/=?`{|}~^-]+)*"
-                + "@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$")) {
-            throw new Exception(Message.INVALID_EMAIL);
+        if (!Objects.equals(newPassword, repeatPassword)) {
+            throw new ValidationException(Message.PASSWORD_NOT_MATCHES);
         }
-        if (user.getPassword() == null) {
+        if (newPassword == null || newPassword.isEmpty() || repeatPassword == null || repeatPassword.isEmpty()) {
             throw new ValidationException(Message.BLANK_PASSWORD);
         }
-        if (user.getPassword().length() < 8) {
-            throw new ValidationException(Message.INVALID_LENGTH_OF_PASSWORD);
+        Connection connection = userRepository.getConnection();
+        connection.setAutoCommit(false);
+        try {
+            userRepository.updateByEmail(email, MD5Encoder.encode(newPassword));
+            connection.commit();
+        } catch (Exception e) {
+            connection.rollback();
+            connection.setAutoCommit(true);
+            throw new RuntimeException("Changing password failed" + ", " + e.getMessage());
         }
     }
 
-    private void Validation(String email, String password) throws Exception {
-        if (email == null || password == null)
-            throw new ValidationException(Message.EMAIL_OR_PASSWORD_IS_NULL);
+
+    private void Validation(String email, String password) {
+        if (email == null || email.isEmpty()) {
+            throw new ValidationException(Message.BLANK_EMAIL);
+        }
+        if (password == null || password.isEmpty()) {
+            throw new ValidationException(Message.BLANK_PASSWORD);
+        }
+        if (password.length() < 8) {
+            throw new ValidationException(Message.INVALID_LENGTH_OF_PASSWORD);
+        }
+        if (!Pattern.compile("^(.+)@(\\S+)$").matcher(email).matches()) {
+            throw new ValidationException(Message.INVALID_EMAIL);
+        }
     }
+
+    private void Validation(String email, String password, int age, long balance) {
+        Validation(email, password);
+        if (age <= 0) {
+            throw new ValidationException(Message.INVALID_AGE);
+        }
+        if (balance < 0) {
+            throw new ValidationException(Message.INVALID_BALANCE);
+        }
+
+
+    }
+
 }
