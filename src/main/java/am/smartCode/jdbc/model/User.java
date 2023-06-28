@@ -1,30 +1,37 @@
 package am.smartCode.jdbc.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
-@Setter
+import javax.persistence.*;
+import java.util.Objects;
 @Getter
-@NoArgsConstructor
+@Setter
 @ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "users")
 public class User {
-
-    private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
     private String name;
     private String lastname;
-    private double balance;
     private String email;
     private String password;
     private int age;
+    private long balance;
 
-    public User(String name, String lastname, double balance, String email, String password, int age) {
-        this.name = name;
-        this.lastname = lastname;
-        this.balance = balance;
-        this.email = email;
-        this.password = password;
-        this.age = age;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(email, user.email) && Objects.equals(password, user.password);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(email, password);
     }
 }

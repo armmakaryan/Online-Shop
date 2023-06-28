@@ -3,7 +3,6 @@ package am.smartCode.jdbc.repository.user.impl;
 import am.smartCode.jdbc.model.User;
 import am.smartCode.jdbc.repository.user.UserRepository;
 import am.smartCode.jdbc.util.DatabaseConnection;
-import am.smartCode.jdbc.util.constants.Strings;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -48,7 +47,7 @@ public class UserRepositoryImpl implements UserRepository {
         preparedStatement.setString(3, user.getEmail());
         preparedStatement.setString(4, user.getPassword());
         preparedStatement.setInt(5, user.getAge());
-        preparedStatement.setLong(6, (long) user.getBalance());
+        preparedStatement.setLong(6, user.getBalance());
 
         preparedStatement.executeUpdate();
         preparedStatement.close();
@@ -65,7 +64,7 @@ public class UserRepositoryImpl implements UserRepository {
         preparedStatement.setString(3, user.getEmail());
         preparedStatement.setString(4, user.getPassword());
         preparedStatement.setInt(5, user.getAge());
-        preparedStatement.setLong(6, (long) user.getBalance());
+        preparedStatement.setLong(6, user.getBalance());
         preparedStatement.setLong(7, user.getId());
         preparedStatement.executeUpdate();
         preparedStatement.close();
@@ -79,10 +78,11 @@ public class UserRepositoryImpl implements UserRepository {
         ResultSet resultSet = preparedStatement.executeQuery();
         while (resultSet.next()) {
             setUserFields(user, resultSet);
+            resultSet.close();
+            preparedStatement.close();
+            return user;
         }
-        resultSet.close();
-        preparedStatement.close();
-        return user;
+        return null;
     }
 
     @Override
@@ -123,40 +123,26 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void delete(String email) throws SQLException {
+    public void delete(long id) throws SQLException {
 
-        PreparedStatement preparedStatement = connection.prepareStatement("DELETE from users WHERE email = ?");
-        preparedStatement.setString(1, email);
+        PreparedStatement preparedStatement = connection.prepareStatement("DELETE from users WHERE id = ?");
+        preparedStatement.setLong(1, id);
 
         preparedStatement.executeUpdate();
         preparedStatement.close();
     }
-
-    @Override
     public Connection getConnection() {
         return connection;
     }
 
-    @Override
-    public void updateByEmail(String email,String password) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement(
-                "UPDATE users SET password = ? WHERE email = ?"
-        );
-
-        preparedStatement.setString(1,password);
-        preparedStatement.setString(2,email);
-        preparedStatement.executeUpdate();
-        preparedStatement.close();
-    }
-
     private void setUserFields(User user, ResultSet resultSet) throws SQLException {
-        user.setId(resultSet.getLong(Strings.ID));
-        user.setName(resultSet.getString(Strings.NAME));
-        user.setLastname(resultSet.getString(Strings.LASTNAME));
-        user.setEmail(resultSet.getString(Strings.USERNAME));
-        user.setPassword(resultSet.getString(Strings.PASSWORD));
-        user.setAge(resultSet.getInt(Strings.AGE));
-        user.setBalance(resultSet.getLong(Strings.BALANCE));
+        user.setId(resultSet.getLong("id"));
+        user.setName(resultSet.getString("name"));
+        user.setLastname(resultSet.getString("lastname"));
+        user.setEmail(resultSet.getString("username"));
+        user.setPassword(resultSet.getString("password"));
+        user.setAge(resultSet.getInt("age"));
+        user.setBalance(resultSet.getLong("balance"));
     }
 
     private void addUserToListFromResultSet(List<User> usersList, ResultSet resultSet) throws SQLException {

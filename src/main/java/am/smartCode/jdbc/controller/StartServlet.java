@@ -1,6 +1,6 @@
 package am.smartCode.jdbc.controller;
 
-import am.smartCode.jdbc.repository.user.impl.UserRepositoryImpl;
+import am.smartCode.jdbc.repository.user.impl.UserRepositoryJdbcImpl;
 import am.smartCode.jdbc.service.user.UserService;
 import am.smartCode.jdbc.service.user.impl.UserServiceImpl;
 import am.smartCode.jdbc.util.CookieUtil;
@@ -17,7 +17,7 @@ public class StartServlet extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String encodedString = CookieUtil.getCookieValueByName(req.getCookies(), Strings.REMEMBER);
-        UserService userService = new UserServiceImpl(new UserRepositoryImpl(DatabaseConnection.getInstance()));
+        UserService userService = new UserServiceImpl(new UserRepositoryJdbcImpl(DatabaseConnection.getInstance()));
         try {
             if (encodedString != null) {
                 String remember = AESManager.decrypt(encodedString);

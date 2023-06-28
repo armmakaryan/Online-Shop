@@ -1,6 +1,6 @@
 package am.smartCode.jdbc.controller;
 
-import am.smartCode.jdbc.repository.user.impl.UserRepositoryImpl;
+import am.smartCode.jdbc.repository.user.impl.UserRepositoryJdbcImpl;
 import am.smartCode.jdbc.service.user.UserService;
 import am.smartCode.jdbc.service.user.impl.UserServiceImpl;
 import am.smartCode.jdbc.util.DatabaseConnection;
@@ -18,7 +18,7 @@ public class LoginServlet extends HttpServlet {
         String email = req.getParameter(Strings.EMAIL);
         String password = req.getParameter(Strings.PASSWORD);
         String rememberMe = req.getParameter(Strings.REMEMBER_ME);
-        UserService userService = new UserServiceImpl(new UserRepositoryImpl(DatabaseConnection.getInstance()));
+        UserService userService = new UserServiceImpl(new UserRepositoryJdbcImpl(DatabaseConnection.getInstance()));
         try {
             userService.login(email, password);
             if (rememberMe != null && rememberMe.equals(Strings.ON)) {

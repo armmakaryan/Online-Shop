@@ -3,7 +3,7 @@ package am.smartCode.jdbc.service.user.impl;
 import am.smartCode.jdbc.exception.UserNotFoundException;
 import am.smartCode.jdbc.exception.ValidationException;
 import am.smartCode.jdbc.model.User;
-import am.smartCode.jdbc.repository.user.UserRepository;
+import am.smartCode.jdbc.repository.user.impl.UserRepositoryImpl;
 import am.smartCode.jdbc.service.user.UserService;
 import am.smartCode.jdbc.util.constants.Message;
 import am.smartCode.jdbc.util.encoder.MD5Encoder;
@@ -15,11 +15,12 @@ import java.util.regex.Pattern;
 
 public class UserServiceImpl implements UserService {
 
-    private final UserRepository userRepository;
+    private final UserRepositoryImpl userRepository;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepositoryImpl userRepository) {
         this.userRepository = userRepository;
     }
+
 
     @Override
     public void register(String name, String lastname, String email, String password, int age, long balance) throws SQLException {
@@ -28,7 +29,7 @@ public class UserServiceImpl implements UserService {
         connection.setAutoCommit(false);
 
         Validation(email, password, age, balance);
-        if (userRepository.get(email) != null){
+        if (userRepository.get(Long.valueOf(email)) != null){
             throw new ValidationException(Message.EMAIL_IS_NOT_AVAILABLE);
         }
         try {  User user = new User();
@@ -52,7 +53,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void login(String email, String password) throws SQLException {
         Validation(email, password);
-        User user = userRepository.get(email);
+        User user = userRepository.get(Long.valueOf(email));
         if (user == null) {
             throw new UserNotFoundException(Message.USER_NOT_FOUND);
         }
@@ -65,12 +66,12 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(String email, String password) throws SQLException {
         Validation(email, password);
         Connection connection = userRepository.getConnection();
-        if (!userRepository.get(email).getPassword().equals(password)) {
+        if (!userRepository.get(Long.valueOf(email)).getPassword().equals(password)) {
             throw new ValidationException(Message.INVALID_PASSWORD);
         }
         connection.setAutoCommit(false);
         try {
-            userRepository.delete(email);
+            userRepository.delete(Long.valueOf(email));
             connection.commit();
         } catch (Exception e) {
             connection.rollback();
@@ -82,10 +83,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateUser(String email, String newPassword, String repeatPassword) throws SQLException {
         if (email == null || email.isEmpty()) {
-            throw new ValidationException(Message.USER_NOT_FOUND);
+            throw new RuntimeException("User not found");
         }
         if (!Objects.equals(newPassword, repeatPassword)) {
-            throw new ValidationException(Message.PASSWORD_NOT_MATCHES);
+            throw new RuntimeException("Passwords does not match");
         }
         if (newPassword == null || newPassword.isEmpty() || repeatPassword == null || repeatPassword.isEmpty()) {
             throw new ValidationException(Message.BLANK_PASSWORD);
@@ -93,7 +94,9 @@ public class UserServiceImpl implements UserService {
         Connection connection = userRepository.getConnection();
         connection.setAutoCommit(false);
         try {
-            userRepository.updateByEmail(email, MD5Encoder.encode(newPassword));
+            User user = userRepository.get(email);
+            user.setPassword(newPassword);
+            userRepository.update(user);
             connection.commit();
         } catch (Exception e) {
             connection.rollback();

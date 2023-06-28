@@ -1,6 +1,6 @@
 package am.smartCode.jdbc.controller;
 
-import am.smartCode.jdbc.repository.user.impl.UserRepositoryImpl;
+import am.smartCode.jdbc.repository.user.impl.UserRepositoryJdbcImpl;
 import am.smartCode.jdbc.service.user.UserService;
 import am.smartCode.jdbc.service.user.impl.UserServiceImpl;
 import am.smartCode.jdbc.util.DatabaseConnection;
@@ -19,7 +19,7 @@ public class ChangePasswordServlet extends HttpServlet {
         String email = (String)req.getSession().getAttribute(Strings.EMAIL);
         String newPassword = req.getParameter(Strings.NEW_PASSWORD);
         String repeatPassword = req.getParameter(Strings.REPEAT_PASSWORD);
-        UserService userService = new UserServiceImpl(new UserRepositoryImpl(DatabaseConnection.getInstance()));
+        UserService userService = new UserServiceImpl(new UserRepositoryJdbcImpl(DatabaseConnection.getInstance()));
         try {
             userService.updateUser(email,newPassword,repeatPassword);
             resp.sendRedirect(Path.HOME_PAGE);

@@ -1,6 +1,6 @@
 package am.smartCode.jdbc.controller;
 
-import am.smartCode.jdbc.repository.user.impl.UserRepositoryImpl;
+import am.smartCode.jdbc.repository.user.impl.UserRepositoryJdbcImpl;
 import am.smartCode.jdbc.service.user.UserService;
 import am.smartCode.jdbc.service.user.impl.UserServiceImpl;
 import am.smartCode.jdbc.util.DatabaseConnection;
@@ -33,7 +33,7 @@ public class RegisterServlet extends HttpServlet {
             balance = Long.parseLong(balancestr);
         } catch (Exception ignored) {
         }
-        UserService userService = new UserServiceImpl(new UserRepositoryImpl(DatabaseConnection.getInstance()));
+        UserService userService = new UserServiceImpl(new UserRepositoryJdbcImpl(DatabaseConnection.getInstance()));
         try {
             userService.register(name, lastname, email, password, age, balance);
             HttpSession session = req.getSession();

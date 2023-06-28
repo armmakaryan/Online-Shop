@@ -5,7 +5,7 @@ public class Main {
 
 //        DatabaseConnection databaseConnection = DatabaseConnection.getInstance();
 //
-//        UserRepository userRepository = new UserRepositoryImpl(databaseConnection);
+//        UserRepository userRepository = new UserRepositoryJdbcImpl(databaseConnection);
 //        ProductRepository productRepository = new ProductRepositoryImpl(databaseConnection);
 //        OrderRepository orderRepository = new OrderRepositoryImpl(databaseConnection);
 //

@@ -3,7 +3,7 @@ package am.smartCode.jdbc.service.product.impl;
 import am.smartCode.jdbc.exception.ProductNotFoundException;
 import am.smartCode.jdbc.exception.ProductValidationException;
 import am.smartCode.jdbc.model.Product;
-import am.smartCode.jdbc.repository.product.ProductRepository;
+import am.smartCode.jdbc.repository.product.impl.ProductRepositoryImpl;
 import am.smartCode.jdbc.service.product.ProductService;
 import am.smartCode.jdbc.util.constants.Message;
 
@@ -12,9 +12,9 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class ProductServiceImpl implements ProductService {
-    private final ProductRepository productRepository;
+    private final ProductRepositoryImpl productRepository;
 
-    public ProductServiceImpl(ProductRepository productRepository) {
+    public ProductServiceImpl(ProductRepositoryImpl productRepository) {
         this.productRepository = productRepository;
     }
 
