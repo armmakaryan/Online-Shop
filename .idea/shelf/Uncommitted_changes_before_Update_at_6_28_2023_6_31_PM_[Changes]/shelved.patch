@@ -1,0 +1,71 @@
+Index: src/main/java/am/smartCode/jdbc/model/Product.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package am.smartCode.jdbc.model;\r\n\r\nimport lombok.*;\r\n@Setter\r\n@Getter\r\n@NoArgsConstructor\r\n@AllArgsConstructor\r\n@ToString\r\n@EqualsAndHashCode\r\npublic class Product {\r\n    private long id;\r\n    private String category;\r\n    private String name;\r\n    private long price;\r\n\r\n\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/am/smartCode/jdbc/model/Product.java b/src/main/java/am/smartCode/jdbc/model/Product.java
+--- a/src/main/java/am/smartCode/jdbc/model/Product.java	(revision 425cd5aac1b1655b2802a711e1ab915cca4c08e7)
++++ b/src/main/java/am/smartCode/jdbc/model/Product.java	(date 1687962489634)
+@@ -1,17 +1,24 @@
+ package am.smartCode.jdbc.model;
+ 
+ import lombok.*;
+-@Setter
++
++import javax.persistence.*;
++
+ @Getter
+-@NoArgsConstructor
+-@AllArgsConstructor
++@Setter
+ @ToString
++@AllArgsConstructor
++@NoArgsConstructor
+ @EqualsAndHashCode
++@Entity
++@Table(name = "products")
+ public class Product {
++    @Id
++    @GeneratedValue(strategy = GenerationType.IDENTITY)
+     private long id;
+     private String category;
+     private String name;
++    private String publishedDate;
+     private long price;
+ 
+-
+-}
++}
+\ No newline at end of file
+Index: src/main/java/am/smartCode/jdbc/model/Order.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package am.smartCode.jdbc.model;\r\n\r\nimport lombok.*;\r\n@Getter\r\n@Setter\r\n@ToString\r\n@AllArgsConstructor\r\n@NoArgsConstructor\r\npublic class Order {\r\n    private long id;\r\n    private long userId;\r\n    private long productId;\r\n    private int countOfProduct;\r\n    private long totalPrice;\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/am/smartCode/jdbc/model/Order.java b/src/main/java/am/smartCode/jdbc/model/Order.java
+--- a/src/main/java/am/smartCode/jdbc/model/Order.java	(revision 425cd5aac1b1655b2802a711e1ab915cca4c08e7)
++++ b/src/main/java/am/smartCode/jdbc/model/Order.java	(date 1687962489632)
+@@ -1,12 +1,19 @@
+ package am.smartCode.jdbc.model;
+ 
+ import lombok.*;
++
++import javax.persistence.*;
++
+ @Getter
+ @Setter
+ @ToString
+ @AllArgsConstructor
+ @NoArgsConstructor
++@Entity
++@Table(name = "orders")
+ public class Order {
++    @Id
++    @GeneratedValue(strategy = GenerationType.IDENTITY)
+     private long id;
+     private long userId;
+     private long productId;
